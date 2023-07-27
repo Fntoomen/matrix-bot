@@ -4,23 +4,23 @@
 
 
 #### First of all, create the .env file:
-```shell
+```
 cp .env-dist .env
 ```
 ##### and replace default parameters with your own configuration
 
 #### Create virtual enviroment (optional):
-```shell
+```
 virtualenv .venv
 source .venv/bin/activate
 ```
 
 #### Install all required packages:
-```shell
+```
 pip install -r requirements.txt
 ```
 
 #### Now you can start the bot:
-```shell
+```
 ./bot.sh
 ```
