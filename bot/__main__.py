@@ -24,7 +24,7 @@ class MatrixBot:
             self.room_id = room
 
     async def fetch_room_media(self):
-        media_only = []
+        media_list = []
         token = "END"  # a not None start token, actual value doesn't matter
 
         while True:
@@ -33,7 +33,7 @@ class MatrixBot:
             token = response.end
 
             # add media messages to the list
-            media_only.extend([
+            media_list.extend([
                 msg for msg in response.chunk
                 if isinstance(msg, RoomMessageImage)
                 and "url" in msg.source["content"]  # only media messages have 'url'
@@ -42,26 +42,20 @@ class MatrixBot:
             if token is None:  # all messages have been fetched
                 break
 
-        return media_only
+        return media_list
 
     async def pick_random_media(self, media_list):
         if len(media_list) == 0:
             # handle the empty list somehow. For example, raise an exception:
             raise ValueError("No media found in the provided list")
 
-        random_media = random.choice(media_list)
-        media_url = random_media.source["content"]["url"]
+        return random.choice(media_list)
 
-        return media_url
-
-    async def send_media_message(self, media_url):
+    async def send_media_message(self, random_media):
         await self.client.room_send(
-                room_id=self.room_id,
+                room_id=random_media.source["room_id"],
                 message_type="m.room.message",
-                content={
-                    "msgtype": "m.image",
-                    "url": media_url,
-                    }
+                content=random_media.source["content"]
                 )
 
     async def daily_action(self):
@@ -78,9 +72,9 @@ class MatrixBot:
             await asyncio.sleep((target_time - now).total_seconds())
 
             # fetch old media then select and send one
-            old_media = await self.fetch_room_media()
-            media_to_send_url = await self.pick_random_media(old_media)
-            await self.send_media_message(media_to_send_url)
+            media_list = await self.fetch_room_media()
+            random_media = await self.pick_random_media(media_list)
+            await self.send_media_message(random_media)
 
     async def run(self):
         # login
