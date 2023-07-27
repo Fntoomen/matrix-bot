@@ -30,7 +30,6 @@ class MatrixBot:
         while True:
             # get several last messages
             response = await self.client.room_messages(self.room_id, token)
-            print(response)
             token = response.end
 
             # add media messages to the list
