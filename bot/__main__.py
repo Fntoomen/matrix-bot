@@ -10,6 +10,7 @@ MATRIX_USERNAME = os.getenv('MATRIX_USERNAME')
 MATRIX_PASSWORD = os.getenv('MATRIX_PASSWORD')
 MATRIX_ACCESS_TOKEN = os.getenv('MATRIX_ACCESS_TOKEN')
 TIME_TO_POST = os.getenv('TIME_TO_POST')
+MINIMAL_AGE = os.getenv('MINIMAL_AGE')
 
 class MatrixBot:
     def __init__(self):
@@ -23,13 +24,13 @@ class MatrixBot:
         for room in response.rooms:
             self.room_id = room
 
-    async def fetch_room_media(self):
+    async def fetch_room_media(self, room_id):
         media_list = []
         token = "END"  # a not None start token, actual value doesn't matter
 
         while True:
             # get several last messages
-            response = await self.client.room_messages(self.room_id, token)
+            response = await self.client.room_messages(room_id, token)
             token = response.end
 
             # add media messages to the list
@@ -37,6 +38,7 @@ class MatrixBot:
                 msg for msg in response.chunk
                 if isinstance(msg, RoomMessageImage)
                 and "url" in msg.source["content"]  # only media messages have 'url'
+                and int(MINIMAL_AGE) <= int(msg.source["age"])
                 ])
 
             if token is None:  # all messages have been fetched
