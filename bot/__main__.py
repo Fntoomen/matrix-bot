@@ -16,13 +16,6 @@ class MatrixBot:
     def __init__(self):
         self.client = AsyncClient(MATRIX_HOMESERVER_URL, MATRIX_USERNAME)
         self.client.access_token = MATRIX_ACCESS_TOKEN
-        self.room_id = None
-
-    async def autojoin_rooms(self):
-        response = await self.client.joined_rooms()
-
-        for room in response.rooms:
-            self.room_id = room
 
     async def fetch_room_media(self, room_id):
         media_list = []
@@ -46,13 +39,6 @@ class MatrixBot:
 
         return media_list
 
-    async def pick_random_media(self, media_list):
-        if len(media_list) == 0:
-            # handle the empty list somehow. For example, raise an exception:
-            raise ValueError("No media found in the provided list")
-
-        return random.choice(media_list)
-
     async def send_media_message(self, random_media):
         await self.client.room_send(
                 room_id=random_media.source["room_id"],
@@ -73,17 +59,16 @@ class MatrixBot:
             # wait until the target_time
             await asyncio.sleep((target_time - now).total_seconds())
 
-            # fetch old media then select and send one
-            media_list = await self.fetch_room_media()
-            random_media = await self.pick_random_media(media_list)
-            await self.send_media_message(random_media)
+            response = await self.client.joined_rooms()
+            for room in response.rooms:
+                # fetch old media then select and send one
+                media_list = await self.fetch_room_media(room)
+                random_media = random.choice(media_list)
+                await self.send_media_message(random_media)
 
     async def run(self):
         # login
         await self.client.login(MATRIX_PASSWORD)
-
-        # auto-join rooms
-        await self.autojoin_rooms()
 
         # run the daily action
         asyncio.create_task(self.daily_action())
