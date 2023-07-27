@@ -3,7 +3,7 @@ import random
 import os
 from datetime import datetime, timedelta
 
-from nio import AsyncClient, RoomMessagesResponse
+from nio import AsyncClient, RoomMessageImage
 
 MATRIX_HOMESERVER_URL = os.getenv('MATRIX_HOMESERVER_URL')
 MATRIX_USERNAME = os.getenv('MATRIX_USERNAME')
@@ -35,9 +35,9 @@ class MatrixBot:
             # add media messages to the list
             media_only.extend([
                 msg for msg in response.chunk
-                if isinstance(msg, RoomMessagesResponse)
-                and "url" in msg.content  # only media messages have 'url'
-            ])
+                if isinstance(msg, RoomMessageImage)
+                and "url" in msg.source["content"]  # only media messages have 'url'
+                ])
 
             if token is None:  # all messages have been fetched
                 break
@@ -50,19 +50,19 @@ class MatrixBot:
             raise ValueError("No media found in the provided list")
 
         random_media = random.choice(media_list)
-        media_url = random_media.content["url"]
+        media_url = random_media.source["content"]["url"]
 
         return media_url
 
     async def send_media_message(self, media_url):
         await self.client.room_send(
-            room_id=self.room_id,
-            message_type="m.room.message",
-            content={
-                "msgtype": "m.image",
-                "url": media_url,
-            }
-        )
+                room_id=self.room_id,
+                message_type="m.room.message",
+                content={
+                    "msgtype": "m.image",
+                    "url": media_url,
+                    }
+                )
 
     async def daily_action(self):
         while True:
