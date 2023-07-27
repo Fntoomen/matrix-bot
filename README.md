@@ -26,5 +26,6 @@ pip install -r requirements.txt
 ```
 
 #### Note:
-### If the room is E2EE then you have to remove the `MINIMAL_AGE` requirement.
-### You can do this by applying a patch: `git apply remove-minimal-age.patch`
+
+- If the room is E2EE then you have to remove the `MINIMAL_AGE` requirement.
+    - You can do this by applying a patch: `git apply remove-minimal-age.patch`
