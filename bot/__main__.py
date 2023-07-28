@@ -22,7 +22,7 @@ class MatrixBot:
         token = "END"  # a not None start token, actual value doesn't matter
 
         while True:
-            # get several last messages
+            # fetch room messages
             response = await self.client.room_messages(room_id, token)
             token = response.end
 
@@ -48,7 +48,7 @@ class MatrixBot:
 
     async def daily_action(self):
         while True:
-            # calc how long until TIME_TO_POST
+            # calculate how long until TIME_TO_POST
             now = datetime.now()
             target_time = datetime.strptime(TIME_TO_POST, "%H:%M").replace(year=now.year, month=now.month, day=now.day)
 
@@ -61,7 +61,7 @@ class MatrixBot:
 
             response = await self.client.joined_rooms()
             for room in response.rooms:
-                # fetch old media then select and send one
+                # fetch room media then randomly select and send one
                 media_list = await self.fetch_room_media(room)
                 random_media = random.choice(media_list)
                 await self.send_media_message(random_media)
