@@ -9,7 +9,7 @@ cp .env-dist .env
 ```
 ##### and replace default parameters with your own configuration
 
-#### Create virtual enviroment (optional):
+#### Create virtual enviroment (recommended - if not used you may encounter issues related to conflicting dependencies):
 ```
 virtualenv .venv
 source .venv/bin/activate
