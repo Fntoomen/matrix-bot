@@ -1,6 +1,6 @@
 # Matrix bot
 
-## A bot for the Matrix protocol, which, after joining a room, selects one of the old photos placed in this room every day at the set time and forwards them to this room. The goal may be, for example, the occasional re-joy of an old meme or a reflection on the inevitability of the passage of time.
+A bot for the Matrix protocol, which, after joining a room, selects one of the old photos placed in this room every day at the set time and forwards them to this room. The goal may be, for example, the occasional re-joy of an old meme or a reflection on the inevitability of the passage of time.
 
 
 #### First of all, create the .env file:
