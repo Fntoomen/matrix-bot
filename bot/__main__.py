@@ -3,7 +3,7 @@ import random
 import os
 from datetime import datetime, timedelta
 
-from nio import AsyncClient, RoomMessageImage
+from nio import AsyncClient, RoomMessageImage, RoomGetStateResponse, RoomEncryptedImage
 
 MATRIX_HOMESERVER_URL = os.getenv('MATRIX_HOMESERVER_URL')
 MATRIX_USERNAME = os.getenv('MATRIX_USERNAME')
@@ -21,18 +21,34 @@ class MatrixBot:
         media_list = []
         token = "END"  # a not None start token, actual value doesn't matter
 
+        # check if the room is encrypted or not
+        response = await self.client.room_get_state(room_id)
+        if isinstance(response, RoomGetStateResponse):
+            for event in response.events:
+                if event['type'] == 'm.room.encryption':
+                    room_encrypted = True
+                    break
+                room_encrypted = False
+                break
+
         while True:
             # fetch room messages
             response = await self.client.room_messages(room_id, token)
             token = response.end
 
             # add media messages to the list
-            media_list.extend([
-                msg for msg in response.chunk
-                if isinstance(msg, RoomMessageImage)
-                and "url" in msg.source["content"]  # only media messages have 'url'
-                and int(MINIMAL_AGE) <= int(msg.source["age"])
-                ])
+            if room_encrypted == False:
+                media_list.extend([
+                    msg for msg in response.chunk
+                    if isinstance(msg, RoomMessageImage)
+                    and "url" in msg.source["content"]  # only media messages have 'url'
+                    and int(MINIMAL_AGE) <= int(msg.source["age"])
+                    ])
+            else:
+                for msg in response.chunk:
+                    msg = await self.client.decrypt_event(msg)
+                    if isinstance(msg, RoomEncryptedImage) and "url" in msg.source["content"]["file"]:
+                        media_list.append(msg)
 
             if token is None:  # all messages have been fetched
                 break
