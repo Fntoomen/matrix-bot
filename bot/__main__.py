@@ -1,7 +1,7 @@
 import asyncio
 import random
 import os
-from datetime import datetime, timedelta
+from datetime import date
 
 from nio import AsyncClient, RoomMessageImage, RoomGetStateResponse, RoomEncryptedImage
 
@@ -10,7 +10,7 @@ MATRIX_USERNAME = os.getenv('MATRIX_USERNAME')
 MATRIX_PASSWORD = os.getenv('MATRIX_PASSWORD')
 MATRIX_ACCESS_TOKEN = os.getenv('MATRIX_ACCESS_TOKEN')
 TIME_TO_POST = os.getenv('TIME_TO_POST')
-MINIMAL_AGE = os.getenv('MINIMAL_AGE')
+TIMESTAMP = os.getenv('TIMESTAMP')
 PREFIX = os.getenv('PREFIX')
 DATE_FORMAT = os.getenv('DATE_FORMAT')
 
@@ -33,7 +33,7 @@ class MatrixBot:
                 msg for msg in response.chunk
                 if isinstance(msg, RoomMessageImage)
                 and "url" in msg.source["content"]  # only media messages have 'url'
-                and int(MINIMAL_AGE) <= int(msg.source["age"])
+                and int(TIMESTAMP) >= int(msg.source["origin_server_ts"])
                 ])
 
             if token is None:  # all messages have been fetched
@@ -42,9 +42,7 @@ class MatrixBot:
         return media_list
 
     async def send_media_message(self, random_media):
-        now = datetime.now()
-        age = timedelta(milliseconds=random_media.source["age"])
-        post_date = now - age
+        post_date = date.fromtimestamp(random_media.source["origin_server_ts"]/1000)
         post_date = post_date.strftime(DATE_FORMAT)
         content = {
             "msgtype": "m.text",
