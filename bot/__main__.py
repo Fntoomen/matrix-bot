@@ -21,34 +21,18 @@ class MatrixBot:
         media_list = []
         token = "END"  # a not None start token, actual value doesn't matter
 
-        # check if the room is encrypted or not
-        response = await self.client.room_get_state(room_id)
-        if isinstance(response, RoomGetStateResponse):
-            for event in response.events:
-                if event['type'] == 'm.room.encryption':
-                    room_encrypted = True
-                    break
-                room_encrypted = False
-                break
-
         while True:
             # fetch room messages
             response = await self.client.room_messages(room_id, token)
             token = response.end
 
             # add media messages to the list
-            if room_encrypted == False:
-                media_list.extend([
-                    msg for msg in response.chunk
-                    if isinstance(msg, RoomMessageImage)
-                    and "url" in msg.source["content"]  # only media messages have 'url'
-                    and int(MINIMAL_AGE) <= int(msg.source["age"])
-                    ])
-            else:
-                for msg in response.chunk:
-                    msg = await self.client.decrypt_event(msg)
-                    if isinstance(msg, RoomEncryptedImage) and "url" in msg.source["content"]["file"]:
-                        media_list.append(msg)
+            media_list.extend([
+                msg for msg in response.chunk
+                if isinstance(msg, RoomMessageImage)
+                and "url" in msg.source["content"]  # only media messages have 'url'
+                and int(MINIMAL_AGE) <= int(msg.source["age"])
+                ])
 
             if token is None:  # all messages have been fetched
                 break
@@ -79,6 +63,8 @@ class MatrixBot:
             for room in response.rooms:
                 # fetch room media then randomly select and send one
                 media_list = await self.fetch_room_media(room)
+                if not media_list:
+                    continue # the room is E2EE or doesnt have any media in it
                 random_media = random.choice(media_list)
                 await self.send_media_message(random_media)
 
