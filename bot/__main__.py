@@ -11,6 +11,8 @@ MATRIX_PASSWORD = os.getenv('MATRIX_PASSWORD')
 MATRIX_ACCESS_TOKEN = os.getenv('MATRIX_ACCESS_TOKEN')
 TIME_TO_POST = os.getenv('TIME_TO_POST')
 MINIMAL_AGE = os.getenv('MINIMAL_AGE')
+PREFIX = os.getenv('PREFIX')
+DATE_FORMAT = os.getenv('DATE_FORMAT')
 
 class MatrixBot:
     def __init__(self):
@@ -40,6 +42,16 @@ class MatrixBot:
         return media_list
 
     async def send_media_message(self, random_media):
+        now = datetime.now()
+        age = timedelta(milliseconds=random_media.source["age"])
+        post_date = now - age
+        post_date = post_date.strftime(DATE_FORMAT)
+        content = {
+            "msgtype": "m.text",
+            "body": PREFIX+' '+post_date
+        }
+        await self.client.room_send(random_media.source["room_id"], "m.room.message", content)
+
         await self.client.room_send(
                 room_id=random_media.source["room_id"],
                 message_type="m.room.message",
