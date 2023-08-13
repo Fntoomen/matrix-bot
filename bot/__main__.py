@@ -58,38 +58,21 @@ class MatrixBot:
                 content=random_media.source["content"]
                 )
 
-    async def daily_action(self):
-        while True:
-            # calculate how long until TIME_TO_POST
-            now = datetime.now()
-            target_time = datetime.strptime(TIME_TO_POST, "%H:%M").replace(year=now.year, month=now.month, day=now.day)
-
-            if now > target_time:
-                # if now surpassed today's target, calculate for next day
-                target_time += timedelta(days=1)
-
-            # wait until the target_time
-            await asyncio.sleep((target_time - now).total_seconds())
-
-            response = await self.client.joined_rooms()
-            for room in response.rooms:
-                # fetch room media then randomly select and send one
-                media_list = await self.fetch_room_media(room)
-                if not media_list:
-                    continue # the room is E2EE or doesnt have any media in it
-                random_media = random.choice(media_list)
-                await self.send_media_message(random_media)
-
     async def run(self):
         # login
         await self.client.login(MATRIX_PASSWORD)
 
-        # run the daily action
-        asyncio.create_task(self.daily_action())
+        response = await self.client.joined_rooms()
+        for room in response.rooms:
+            # fetch room media then randomly select and send one
+            media_list = await self.fetch_room_media(room)
+            if not media_list:
+                continue # the room is E2EE or doesnt have any media in it
+            random_media = random.choice(media_list)
+            await self.send_media_message(random_media)
 
-        # keeps the bot running
-        while True:
-            await asyncio.sleep(1)
+        await self.client.logout()
+        await self.client.close()
 
 if __name__ == "__main__":
     bot = MatrixBot()
