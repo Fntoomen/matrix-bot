@@ -63,10 +63,13 @@ class MatrixBot:
         for room in response.rooms:
             # fetch room media then randomly select and send one
             media_list = await self.fetch_room_media(room)
+            print(room, "Fetched room media")
             if not media_list:
+                print(room, "The room is E2EE or doesn't have any media in it")
                 continue # the room is E2EE or doesnt have any media in it
             random_media = random.choice(media_list)
             await self.send_media_message(random_media)
+            print(room, "Sent randomly chosen media to the room")
 
         await self.client.logout()
         await self.client.close()
